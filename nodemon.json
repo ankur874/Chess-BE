@@ -1,0 +1,6 @@
+{
+  "ext": "ts",
+  "exec": "npx tsx src/index.ts",
+  "watch": ["src"],
+  "module": "commonjs"
+}
