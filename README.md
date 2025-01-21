@@ -4,7 +4,7 @@ A backend server for managing a chess game, featuring WebSocket support for real
 
 ## Features
 - Real-time chess gameplay using WebSockets.
-- Handles player connections, moves, and game state updates.
+- Handles player connections, moves and game state(GAME_OVER | GAME_LEFT).
 
 ---
 
@@ -26,12 +26,15 @@ Follow these steps to set up and run the backend locally:
    cd <repository_name>
    
 2. **Install dependencies**:
+   ```bash
    npm install
    
-3. **Start the server**:
+4. **Start the server**:
+   ```bash
    npm start
 
-4. **Start Listening**
+6. **Start Listening**
+   ```bash
    ws://localhost:8080
    
   
