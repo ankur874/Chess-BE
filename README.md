@@ -1,7 +1,5 @@
 # Chess-Backend
 
-A backend server for managing a chess game, featuring WebSocket support for real-time communication.
-
 ## Features
 
 - Real-time chess gameplay using WebSockets.
