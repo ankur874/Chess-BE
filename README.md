@@ -9,7 +9,6 @@ A backend server for managing a chess game, featuring WebSocket support for real
 ---
 
 ## Frontend Repo
-   ```bash
    https://github.com/ankur874/Chess-FE
 
 ---
