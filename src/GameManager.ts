@@ -1,55 +1,84 @@
-
 import WebSocket from "ws";
-import { INIT_GAME, MOVE } from "./Constants";
+import { INIT_GAME, LEAVE_GAME, MOVE } from "./Constants";
 import { Game } from "./Game";
 
-
 export class GameManager {
-    private games: Game[];
-    private pendingUser: WebSocket | null;
-    private allUsers: WebSocket[];
+  private games: Game[];
+  private pendingUser: WebSocket | null;
+  private allUsers: WebSocket[];
+  private player1Name?: string;
 
-    constructor(){
-        this.games = [];
-        this.pendingUser = null;
-        this.allUsers = [];
-    }
+  constructor() {
+    this.games = [];
+    this.pendingUser = null;
+    this.allUsers = [];
+  }
 
-    addUser(socket: WebSocket){
-      this.allUsers.push(socket);
-      this.handleMatching(socket);
-    }
+  addUser(socket: WebSocket) {
+    this.allUsers.push(socket);
+    this.handleMatching(socket);
+  }
 
-    removeUser(toBeRemovedSocket: WebSocket){
-      this.allUsers =  this.allUsers.filter((socket: WebSocket)=>{
-        return socket!==toBeRemovedSocket
-       });
-    }
+  removeUser(toBeRemovedSocket: WebSocket) {
+    this.allUsers = this.allUsers.filter((socket: WebSocket) => {
+      return socket !== toBeRemovedSocket;
+    });
+  }
 
-    private handleMatching(socket: WebSocket){
-      socket.on('message',(data)=>{
-         const message = JSON.parse(data.toString());
+  removeGame(gameToBeRemoved: Game) {
+    this.games = this.games.filter((game: Game) => {
+      return game != gameToBeRemoved;
+    });
+  }
 
-         if(message.type === INIT_GAME){
-            if(this.pendingUser){
-              const game = new Game(this.pendingUser , socket);
-              this.games.push(game);
-              this.pendingUser = null;
-            }else{
-                this.pendingUser = socket
-            }
-         }
+  findGameForUser(user: WebSocket): Game | undefined {
+    const game = this.games.find((game) => {
+      return game.player1 === user || game.player2 === user;
+    });
+    return game;
+  }
 
-         if(message.type === MOVE){
-           const game = this.games.find((game)=>{
-            return game.player1 === socket || game.player2 === socket;
-           }) 
+  private handleMatching(socket: WebSocket) {
+    socket.on("message", (data) => {
+      const message = JSON.parse(data.toString());
+      if (message.type === INIT_GAME) {
+        if (this.pendingUser) {
+          const game = new Game(
+            this.pendingUser,
+            socket,
+            this.player1Name ?? "",
+            message.name
+          );
+          this.games.push(game);
+          this.pendingUser = null;
+          this.player1Name = "";
+        } else {
+          this.pendingUser = socket;
+          this.player1Name = message.name;
+        }
+      }
 
-           game?.makeMove(socket , message.move);
+      if (message.type === LEAVE_GAME) {
+        this.removeUser(socket);
+        const game = this.findGameForUser(socket);
+        if (game) {
+          game?.makeGameOverBy(socket);
+          this.removeGame(game);
+        } else {
+          if (socket != this.pendingUser) {
+            return;
+          }
+          this.player1Name = "";
+          this.pendingUser = null;
+        }
+      }
 
-
-         }
-      })
-    }
-
+      if (message.type === MOVE) {
+        const game = this.games.find((game) => {
+          return game.player1 === socket || game.player2 === socket;
+        });
+        game?.makeMove(socket, message.move);
+      }
+    });
+  }
 }
